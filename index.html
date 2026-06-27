@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unfollowr — Find who doesn't follow you back</title>
+<meta name="description" content="Drop your Instagram data folder. Get a clean list of accounts that don't follow you back. No login, no extensions, 100% in your browser.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Backgrounds — cool light tones */
+  --bg:#F7F8FC; --surface:#FFFFFF; --surface-2:#EEEEF6; --surface-hover:#E3E3EF;
+  /* Borders — cool-toned */
+  --border:rgba(26,29,60,.08); --border-2:rgba(26,29,60,.13); --border-strong:rgba(26,29,60,.22);
+  /* Text — deep, sharp */
+  --text:#1A1D2E; --text-dim:#4B5068; --text-mute:#8B90A7;
+  /* Accent — Deep Indigo */
+  --accent:#4338CA; --accent-bright:#5B50E6; --accent-dim:#3429A8; --accent-glow:rgba(67,56,202,.18);
+  /* Functional */
+  --success:#16A34A; --success-glow:rgba(22,163,74,.2); --danger:#DC2626; --warning:#D97706;
+  /* Secondary accents */
+  --deep-purple:#7C3AED; --deep-blue:#1E3A8A; --warm-gold:#B45309;
+  /* Radii */
+  --radius:12px; --radius-sm:8px; --radius-lg:16px; --radius-xl:20px;
+  /* Shadows — deeper, cooler */
+  --shadow:0 4px 14px rgba(26,29,60,.08),0 2px 4px rgba(26,29,60,.05);
+  --shadow-lg:0 16px 48px rgba(26,29,60,.12),0 8px 16px rgba(26,29,60,.07);
+  /* Fonts */
+  --font-display:'DM Sans',system-ui,-apple-system,sans-serif;
+  --font-body:'Inter',system-ui,-apple-system,sans-serif;
+  --font-mono:'JetBrains Mono','SF Mono','Monaco',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:100vh}
+.display{font-family:var(--font-display);letter-spacing:-.02em}
+a{color:inherit}
+
+/* Background decor — deep indigo/purple blobs on light canvas */
+.bg-decor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(120px);opacity:.30}
+.blob-1{top:-15%;left:-10%;width:700px;height:700px;background:radial-gradient(circle,rgba(67,56,202,.25),transparent 70%);animation:float-1 25s ease-in-out infinite}
+.blob-2{top:40%;right:-15%;width:500px;height:500px;background:radial-gradient(circle,rgba(124,58,237,.20),transparent 70%);animation:float-2 30s ease-in-out infinite}
+.blob-3{bottom:-10%;left:20%;width:600px;height:600px;background:radial-gradient(circle,rgba(30,58,138,.18),transparent 70%);animation:float-3 28s ease-in-out infinite}
+@keyframes float-1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(80px,60px) scale(1.1) skew(2deg)}}
+@keyframes float-2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,-40px) scale(1.15) skew(-2deg)}}
+@keyframes float-3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(40px,-80px) scale(1.05) skew(1deg)}}
+
+/* Subtle grain for texture */
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* Scroll progress — indigo to purple gradient */
+.scroll-progress{position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--deep-purple));z-index:1000;transition:width .1s ease-out}
+
+/* Drift-dot motif — subtle background pattern */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.35;background-image:radial-gradient(circle,rgba(67,56,202,.10) 1px,transparent 1px);background-size:32px 32px;background-position:16px 16px}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+main{position:relative;z-index:2}
+section{position:relative;z-index:2}
+
+/* Nav — light glass with cool tone */
+.nav{position:sticky;top:0;z-index:100;backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);background:rgba(247,248,252,.88);border-bottom:1px solid var(--border)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;max-width:1200px;margin:0 auto}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+.logo-mark{width:28px;height:28px;display:block;object-fit:contain}
+.logo-text{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.02em}
+.logo-text em{font-style:normal;color:var(--accent)}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{color:var(--text-dim);text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+
+/* Buttons — deep indigo primary */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--radius-sm);font-family:var(--font-body);font-weight:600;font-size:14px;text-decoration:none;cursor:pointer;border:none;transition:all .25s cubic-bezier(.4,0,.2,1);white-space:nowrap}
+.btn-primary{position:relative;overflow:hidden;background:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(67,56,202,.25),0 1px 3px rgba(67,56,202,.15)}
+.btn-primary::after{content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.25),transparent);transform:skewX(-20deg);animation:shimmer 6s infinite}
+@keyframes shimmer{0%,80%{left:-100%}100%{left:200%}}
+.btn-primary:hover{background:var(--accent-bright);transform:translateY(-1px);animation:breathe 2s infinite ease-in-out}
+@keyframes breathe{0%,100%{box-shadow:0 6px 20px rgba(67,56,202,.30),0 3px 8px rgba(67,56,202,.18)}50%{box-shadow:0 8px 24px rgba(67,56,202,.45),0 4px 12px rgba(67,56,202,.25)}}
+.btn-primary:active{transform:translateY(0);background:var(--accent-dim);animation:none}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border-2)}
+.btn-ghost:hover{background:var(--surface-2);border-color:var(--border-strong)}
+.btn-lg{padding:16px 28px;font-size:15px;border-radius:var(--radius)}
+
+/* Hero */
+.hero{padding:96px 0 100px;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border:1px solid var(--border-2);border-radius:100px;font-size:12px;color:var(--text-dim);font-weight:500;margin-bottom:24px;box-shadow:0 1px 4px rgba(26,29,60,.06)}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--success);box-shadow:0 0 8px var(--success-glow);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.hero h1{font-family:var(--font-display);font-size:clamp(40px,6vw,56px);font-weight:700;line-height:1.08;letter-spacing:-.03em;margin-bottom:24px;color:var(--text)}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),var(--deep-purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{font-size:18px;color:var(--text-dim);margin-bottom:32px;max-width:520px;line-height:1.65}
+.hero-cta{display:flex;gap:12px;margin-bottom:48px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:32px;flex-wrap:wrap}
+.hero-stat{display:flex;flex-direction:column;gap:4px}
+.hero-stat strong{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--text)}
+.hero-stat span{font-size:13px;color:var(--text-mute)}
+
+/* Hero preview card — elevated with deep shadow */
+.hero-visual{position:relative}
+.preview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;box-shadow:var(--shadow-lg);position:relative;animation:float-card 6s ease-in-out infinite}
+@keyframes float-card{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.preview-card::before{content:'';position:absolute;inset:-1px;border-radius:var(--radius-xl);padding:1px;background:linear-gradient(135deg,rgba(67,56,202,.20),transparent 60%);-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+.preview-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.preview-title{font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--text)}
+.preview-count{font-size:12px;color:var(--text-dim);background:var(--surface-2);padding:4px 10px;border-radius:100px;border:1px solid var(--border)}
+.preview-progress{margin-bottom:20px}
+.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);margin-bottom:8px}
+.progress-track{height:6px;background:var(--surface-2);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-bright));border-radius:100px;transition:width .5s ease}
+.preview-list{display:flex;flex-direction:column;gap:8px}
+.preview-row{display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface-2);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.preview-row.done{opacity:.5}
+.preview-row.done .preview-username{text-decoration:line-through}
+.preview-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#fff;flex-shrink:0;font-family:var(--font-display)}
+.preview-username{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+.preview-action{font-size:12px;color:var(--text-dim)}
+.preview-action.done{color:var(--success);font-weight:600}
+
+/* Sections */
+.section{padding:96px 0}
+.section-header{text-align:center;max-width:640px;margin:0 auto 56px}
+.eyebrow{display:inline-block;font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;margin-bottom:16px;padding:4px 12px;background:rgba(67,56,202,.07);border:1px solid rgba(67,56,202,.16);border-radius:100px}
+.section-header h2{font-family:var(--font-display);font-size:clamp(32px,4vw,44px);font-weight:700;line-height:1.1;letter-spacing:-.02em;margin-bottom:16px;color:var(--text)}
+.section-header p{font-size:17px;color:var(--text-dim);line-height:1.6}
+.section-header code{background:var(--surface-2);padding:2px 8px;border-radius:6px;font-size:14px;color:var(--accent);font-family:var(--font-mono);border:1px solid var(--border)}
+
+/* Steps */
+.steps-container{max-width:760px;margin:0 auto}
+.steps-meta{display:flex;justify-content:center;gap:24px;margin-bottom:48px;flex-wrap:wrap}
+.steps-meta-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim)}
+.steps-meta-item svg{width:16px;height:16px;color:var(--accent)}
+.step-list{list-style:none;position:relative}
+.step-list::before{content:'';position:absolute;left:23px;top:24px;bottom:24px;width:2px;background:linear-gradient(to bottom,var(--border-2),var(--border),transparent);z-index:0}
+.step{display:flex;gap:20px;padding:16px 0;position:relative}
+.step-num{width:48px;height:48px;border-radius:50%;background:var(--surface);border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--accent);flex-shrink:0;position:relative;z-index:1;box-shadow:0 2px 6px rgba(26,29,60,.06)}
+.step-num::before{content:'';position:absolute;inset:-3px;border-radius:50%;background:var(--bg);z-index:-1}
+.step-content{flex:1;padding-top:4px}
+.step-content h3{font-family:var(--font-display);font-size:18px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em;color:var(--text)}
+.step-content p{color:var(--text-dim);font-size:15px;line-height:1.6;margin-bottom:8px}
+.step-content code{background:var(--surface-2);padding:2px 8px;border-radius:6px;font-size:13px;color:var(--accent);font-family:var(--font-mono);border:1px solid var(--border)}
+.step-btn{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:8px;font-size:13px;color:var(--text);font-weight:500;margin:0 2px}
+.step-callout{display:flex;gap:10px;padding:12px 14px;background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.18);border-radius:var(--radius-sm);margin-top:10px;font-size:13px;color:var(--text-dim);line-height:1.5}
+.step-callout svg{width:16px;height:16px;color:var(--warning);flex-shrink:0;margin-top:2px}
+.step-callout.success{background:rgba(22,163,74,.06);border-color:rgba(22,163,74,.18)}
+.step-callout.success svg{color:var(--success)}
+.step-link{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:14px;border-radius:var(--radius-sm);margin-top:8px;transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 10px rgba(67,56,202,.25)}
+.step-link:hover{background:var(--accent-bright);transform:translateY(-1px);box-shadow:0 6px 20px rgba(67,56,202,.30)}
+
+/* Drop zone */
+.drop-section{padding:96px 0}
+.drop-zone{position:relative;max-width:720px;margin:0 auto;padding:64px 32px;background:var(--surface);border:2px dashed var(--border-2);border-radius:var(--radius-xl);text-align:center;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 6px rgba(26,29,60,.05)}
+.drop-zone:hover{border-color:var(--accent);background:var(--surface-2)}
+.drop-zone.dragging{border-color:var(--accent);background:rgba(67,56,202,.03);transform:scale(1.02);box-shadow:0 8px 32px rgba(67,56,202,.14)}
+.drop-zone.processing{pointer-events:none;opacity:.7}
+.drop-icon{width:64px;height:64px;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;background:rgba(67,56,202,.06);border-radius:50%;border:1px solid rgba(67,56,202,.14);color:var(--accent)}
+.drop-icon svg{width:28px;height:28px}
+.drop-zone h3{font-family:var(--font-display);font-size:22px;font-weight:600;margin-bottom:8px;color:var(--text)}
+.drop-zone>p{color:var(--text-dim);font-size:15px;margin-bottom:24px}
+.drop-zone .btn{margin-bottom:16px}
+.drop-hint{font-size:13px;color:var(--text-mute)}
+.drop-hint code{background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:12px;color:var(--text-dim);font-family:var(--font-mono)}
+.demo-link{display:inline-flex;align-items:center;gap:6px;margin-top:20px;color:var(--text-dim);font-size:13px;text-decoration:none;padding:8px 14px;border-radius:100px;border:1px solid var(--border);background:var(--surface);transition:all .2s;cursor:pointer}
+.demo-link:hover{color:var(--accent);border-color:var(--accent)}
+.file-status{margin-top:24px;display:none;flex-direction:column;gap:8px;text-align:left}
+.file-status.active{display:flex}
+.file-status-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px}
+.file-status-item.found svg{color:var(--success)}
+.file-status-item.missing{color:var(--danger);border-color:rgba(220,38,38,.25)}
+.file-status-item.missing svg{color:var(--danger)}
+.file-status-item svg{width:18px;height:18px;flex-shrink:0}
+.file-status-item .filename{flex:1;font-family:var(--font-mono);font-size:13px}
+.processing-state{display:none;flex-direction:column;align-items:center;gap:16px;margin-top:24px}
+.processing-state.active{display:flex}
+.spinner{width:48px;height:48px;border:3px solid var(--surface-2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Results */
+.results{display:none;padding:64px 0 96px}
+.results.active{display:block}
+.demo-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;background:rgba(67,56,202,.05);border:1px solid rgba(67,56,202,.14);border-radius:var(--radius-sm);margin-bottom:20px;font-size:13px;color:var(--text-dim)}
+.demo-banner svg{width:16px;height:16px;color:var(--accent);flex-shrink:0}
+.results-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:32px;flex-wrap:wrap;gap:16px}
+.results-header h2{font-family:var(--font-display);font-size:32px;font-weight:700;letter-spacing:-.02em;margin-top:8px;color:var(--text)}
+.results-actions{display:flex;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:32px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(26,29,60,.05)}
+.stat-card.highlight{border-color:rgba(67,56,202,.22);background:linear-gradient(135deg,rgba(67,56,202,.04),var(--surface))}
+.stat-card.success{border-color:rgba(22,163,74,.22);background:linear-gradient(135deg,rgba(22,163,74,.04),var(--surface))}
+.stat-label{font-size:12px;color:var(--text-dim);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.stat-value{font-family:var(--font-display);font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1;color:var(--text)}
+.stat-card.highlight .stat-value{color:var(--accent)}
+.stat-card.success .stat-value{color:var(--success)}
+
+/* Progress */
+.cleanup-progress{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px;box-shadow:0 2px 6px rgba(26,29,60,.05)}
+.cleanup-progress-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.cleanup-progress-title{font-weight:600;font-size:15px;color:var(--text)}
+.cleanup-progress-count{font-family:var(--font-display);font-size:14px;color:var(--text-dim)}
+.cleanup-progress-count strong{color:var(--text)}
+.cleanup-progress-track{height:8px;background:var(--surface-2);border-radius:100px;overflow:hidden;position:relative}
+.cleanup-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--success));border-radius:100px;transition:width .4s ease;position:relative}
+
+/* Filter */
+.filter-bar{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.search-input{flex:1;min-width:200px;padding:12px 16px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:all .2s}
+.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.search-input::placeholder{color:var(--text-mute)}
+.filter-select{padding:12px 16px;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-sm);color:var(--text);font-family:var(--font-body);font-size:14px;cursor:pointer;outline:none}
+.filter-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+
+/* Accounts */
+.accounts-list{display:flex;flex-direction:column;gap:8px}
+.account-row{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 1px 4px rgba(26,29,60,.04)}
+.account-row:hover{border-color:var(--border-2);background:var(--surface);box-shadow:0 4px 14px rgba(26,29,60,.08),0 2px 4px rgba(26,29,60,.05);transform:translateY(-1px)}
+.account-row.done{opacity:.55}
+.account-row.done .account-username{text-decoration:line-through;color:var(--text-mute)}
+.account-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:15px;color:#fff;flex-shrink:0;text-transform:uppercase}
+.account-info{flex:1;min-width:0}
+.account-username{font-weight:600;font-size:15px;margin-bottom:2px;word-break:break-all;color:var(--text)}
+.account-meta{font-size:12px;color:var(--text-mute)}
+.account-actions{display:flex;gap:6px;flex-shrink:0}
+.icon-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-dim);cursor:pointer;transition:all .2s;text-decoration:none}
+.icon-btn:hover{background:var(--surface-hover);color:var(--text);border-color:var(--border-2)}
+.icon-btn svg{width:16px;height:16px}
+.check-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:transparent;border:1.5px solid var(--border-2);border-radius:var(--radius-sm);color:transparent;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1)}
+.check-btn:hover{border-color:var(--success);background:rgba(22,163,74,.06)}
+.account-row.done .check-btn{background:var(--success);border-color:var(--success);color:#fff}
+.check-btn svg{width:16px;height:16px}
+
+/* Completion */
+.completion-banner{display:none;background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(67,56,202,.06));border:1px solid rgba(22,163,74,.2);border-radius:var(--radius);padding:24px;margin-bottom:24px;text-align:center}
+.completion-banner.active{display:block}
+.completion-banner h3{font-family:var(--font-display);font-size:22px;font-weight:700;margin-bottom:8px;color:var(--text)}
+.completion-banner p{color:var(--text-dim);font-size:14px;margin-bottom:16px}
+
+/* Empty */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-dim)}
+.empty-state svg{width:48px;height:48px;margin:0 auto 16px;color:var(--text-mute)}
+
+/* FAQ */
+.faq-list{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.faq-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all .2s;box-shadow:0 1px 4px rgba(26,29,60,.04)}
+.faq-item:hover{border-color:var(--border-2);box-shadow:0 4px 14px rgba(26,29,60,.08)}
+.faq-question{width:100%;text-align:left;padding:18px 20px;background:transparent;border:none;color:var(--text);font-family:var(--font-body);font-weight:600;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-question:hover{background:var(--surface-2)}
+.faq-question svg{width:18px;height:18px;color:var(--text-mute);transition:transform .25s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+.faq-item.open .faq-question svg{transform:rotate(45deg);color:var(--accent)}
+.faq-answer{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.faq-item.open .faq-answer{max-height:300px}
+.faq-answer-inner{padding:0 20px 18px;color:var(--text-dim);font-size:14px;line-height:1.6}
+
+/* Footer */
+footer{border-top:1px solid var(--border);padding:48px 0;position:relative;z-index:2;background:var(--bg)}
+.footer-inner{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
+.footer-brand{display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:14px}
+.footer-brand .logo-text{color:var(--text)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{color:var(--text-dim);text-decoration:none;font-size:14px;transition:color .2s}
+.footer-links a:hover{color:var(--accent)}
+.footer-disclaimer{width:100%;text-align:center;font-size:12px;color:var(--text-mute);margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-sm);padding:12px 20px;font-size:14px;color:var(--text);box-shadow:var(--shadow-lg);z-index:1000;transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;gap:10px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast svg{width:18px;height:18px;color:var(--success)}
+
+/* Reveal */
+.reveal{opacity:0;transform:translateY(24px);filter:blur(12px);transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1),filter .7s cubic-bezier(.4,0,.2,1)}
+.reveal.visible{opacity:1;transform:translateY(0);filter:blur(0)}
+
+/* Dynamic Life */
+@media (pointer:fine){
+  .cursor-aura{position:fixed;top:0;left:0;width:500px;height:500px;background:radial-gradient(circle,rgba(67,56,202,.12),transparent 60%);border-radius:50%;pointer-events:none;z-index:1;mix-blend-mode:multiply;filter:blur(40px);transform:translate(-50%,-50%);will-change:transform}
+  .spotlight{position:relative}
+  .spotlight::after{content:'';position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .3s;pointer-events:none;background:radial-gradient(600px circle at var(--x, 50%) var(--y, 50%), rgba(255,255,255,0.45), transparent 40%);z-index:1;mix-blend-mode:overlay}
+  .spotlight:hover::after{opacity:1}
+}
+
+/* Responsive */
+@media (max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:48px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-links{display:none}
+}
+@media (max-width:600px){
+  .hero{padding:48px 0 64px}
+  .section{padding:56px 0}
+  .container{padding:0 16px}
+  .drop-zone{padding:40px 20px}
+  .stat-value{font-size:26px}
+  .account-row{padding:12px;gap:10px}
+  .account-avatar{width:36px;height:36px;font-size:13px}
+  .icon-btn,.check-btn{width:32px;height:32px}
+  .footer-inner{flex-direction:column;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+
+</head>
+<body>
+<div class="cursor-aura" id="cursor-aura"></div>
+<div class="bg-decor">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+<div class="grain"></div>
+<div class="scroll-progress" id="scrollProgress" style="width:0%"></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a href="#" class="logo">
+      <img src="logo.png" alt="Unfollowr" class="logo-mark">
+      <span class="logo-text">Unfollow<em>r</em></span>
+    </a>
+    <nav class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener">Instagram Data</a>
+    </nav>
+    <a href="#start" class="btn btn-primary">Start</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="dot"></span>
+            No login · 100% private · Runs in your browser
+          </div>
+          <h1>Find who doesn't <em>follow you back.</em></h1>
+          <p>Drop the Instagram data folder you'll export in 5 minutes. Get a clean list of accounts to unfollow — no extensions, no scams, nothing leaves your device.</p>
+          <div class="hero-cta">
+            <a href="#start" class="btn btn-primary btn-lg">
+              Start cleaning
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+            <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+          </div>
+          <div class="hero-stats">
+            <div class="hero-stat"><strong>0 KB</strong><span>data stored</span></div>
+            <div class="hero-stat"><strong>~5 min</strong><span>to export</span></div>
+            <div class="hero-stat"><strong>100%</strong><span>in your browser</span></div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="preview-card spotlight">
+            <div class="preview-header">
+              <div class="preview-title">Your unfollow list</div>
+              <div class="preview-count">36 accounts</div>
+            </div>
+            <div class="preview-progress">
+              <div class="progress-label">
+                <span>Cleanup progress</span>
+                <span>9 / 36</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:25%"></div>
+              </div>
+            </div>
+            <div class="preview-list">
+              <div class="preview-row done">
+                <div class="preview-avatar" style="background:linear-gradient(135deg,#7C3AED,#4338CA)">T</div>
+                <div class="preview-username">@travel_addict_92</div>
+                <div class="preview-action done">✓ Done</div>
+              </div>
+              <div class="preview-row">
+                <div class="preview-avatar" style="background:linear-gradient(135deg,#5B50E6,#4338CA)">F</div>
+                <div class="preview-username">@foodie_paris</div>
+                <div class="preview-action">Open</div>
+              </div>
+              <div class="preview-row">
+                <div class="preview-avatar" style="background:linear-gradient(135deg,#1E3A8A,#4338CA)">B</div>
+                <div class="preview-username">@brand_account</div>
+                <div class="preview-action">Open</div>
+              </div>
+              <div class="preview-row">
+                <div class="preview-avatar" style="background:linear-gradient(135deg,#8B5CF6,#6366F1)">O</div>
+                <div class="preview-username">@old_friend_2010</div>
+                <div class="preview-action">Open</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Step 1 · Get your data</span>
+        <h2>Export from Instagram</h2>
+        <p>Follow these exact steps on Instagram's official data center. Takes about 5 minutes — most of it is just waiting for the email.</p>
+      </div>
+
+      <div class="steps-container reveal">
+        <div class="steps-meta">
+          <div class="steps-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ~5 minutes
+          </div>
+          <div class="steps-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Official Meta tool
+          </div>
+          <div class="steps-meta-item">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 5L2 7"/></svg>
+            Sent to your email
+          </div>
+        </div>
+
+        <ol class="step-list">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h3>Open Instagram's Data Center</h3>
+              <p>Visit the official Meta Accounts Center and login. Click <span class="step-btn">Export your information</span>, then <span class="step-btn">Create export</span>. Choose your Instagram profile and click <span class="step-btn">Export to device</span>.</p>
+              <a href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener" class="step-link">
+                Open Instagram Data Center
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+              </a>
+            </div>
+          </li>
+
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h3>Select Followers & Following</h3>
+              <p>Click <span class="step-btn">Customise information</span>, then tick <strong>only</strong> <code>Followers and Following</code>. Click Save.</p>
+              <div class="step-callout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Only tick this specific box. Adding photos or messages makes the export massive, and Unfollowr doesn't need them.</span>
+              </div>
+            </div>
+          </li>
+
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h3>Set Date Range & Format</h3>
+              <p>Click <span class="step-btn">Date range</span> and set to <code>All Time</code>, then Save. Click <span class="step-btn">format</span> and set to <code>JSON</code>, then Save.</p>
+              <div class="step-callout success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                <span><strong>JSON is required</strong> — Unfollowr cannot read HTML exports.</span>
+              </div>
+            </div>
+          </li>
+
+          <li class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <h3>Start Export & Download</h3>
+              <p>Click <span class="step-btn">Start Export</span> and enter your password. Instagram will email you when it's ready (usually under 5 mins). Download the data folder.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section class="section drop-section" id="start">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">Step 2 · Drop your folder</span>
+        <h2>Drop your downloaded folder here</h2>
+        <p>We auto-detect <code>followers_1.json</code> and <code>following.json</code> anywhere inside the folder. Nothing is uploaded — everything runs locally in your browser.</p>
+      </div>
+
+      <div class="drop-zone reveal spotlight" id="dropZone">
+        <div class="drop-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <h3>Drag your folder here</h3>
+        <p>or click to browse — we'll find the files</p>
+        <button class="btn btn-primary" id="browseBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Choose folder
+        </button>
+        <div class="drop-hint">Looking for <code>followers_1.json</code> and <code>following.json</code></div>
+        <button class="demo-link" id="demoLink" type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          No folder yet? Try a demo with sample data
+        </button>
+        <input type="file" id="fileInput" webkitdirectory directory multiple style="display:none">
+
+        <div class="file-status" id="fileStatus"></div>
+        <div class="processing-state" id="processingState">
+          <div class="spinner"></div>
+          <p>Reading your files...</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="results" id="results">
+    <div class="container">
+      <div id="demoBannerContainer"></div>
+      <div class="results-header">
+        <div>
+          <span class="eyebrow">Step 3 · Clean up</span>
+          <h2>These accounts don't follow you back</h2>
+        </div>
+        <div class="results-actions">
+          <button class="btn btn-ghost" id="resetBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            <span id="resetBtnText">Start over</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card spotlight">
+          <div class="stat-label">Following</div>
+          <div class="stat-value" id="statFollowing">0</div>
+        </div>
+        <div class="stat-card spotlight">
+          <div class="stat-label">Followers</div>
+          <div class="stat-value" id="statFollowers">0</div>
+        </div>
+        <div class="stat-card highlight spotlight">
+          <div class="stat-label">Don't follow back</div>
+          <div class="stat-value" id="statNonFollowers">0</div>
+        </div>
+        <div class="stat-card success spotlight">
+          <div class="stat-label">Unfollowed</div>
+          <div class="stat-value" id="statUnfollowed">0</div>
+        </div>
+      </div>
+
+      <div class="cleanup-progress">
+        <div class="cleanup-progress-header">
+          <div class="cleanup-progress-title">Cleanup progress</div>
+          <div class="cleanup-progress-count"><strong id="progressDone">0</strong> / <span id="progressTotal">0</span> unfollowed</div>
+        </div>
+        <div class="cleanup-progress-track">
+          <div class="cleanup-progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="completion-banner" id="completionBanner">
+        <h3>Cleanup complete.</h3>
+        <p>You've worked through your entire list. Your Instagram just got a little lighter.</p>
+      </div>
+
+      <div class="filter-bar">
+        <input type="search" class="search-input" id="searchInput" placeholder="Search usernames...">
+        <select class="filter-select" id="sortSelect">
+          <option value="alpha">A → Z</option>
+          <option value="recent">Recently followed</option>
+          <option value="done">Done first</option>
+        </select>
+      </div>
+
+      <div class="accounts-list" id="accountsList"></div>
+
+      <div class="empty-state" id="emptyState" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        <p>No accounts match your search.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="faq">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="eyebrow">FAQ</span>
+        <h2>Good questions, honest answers</h2>
+      </div>
+
+      <div class="faq-list reveal">
+        <div class="faq-item spotlight">
+          <button class="faq-question">
+            Is this safe? Do you store my data?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner">
+            Everything runs in your browser. Your Instagram data is read locally and never uploaded to any server. We don't have a server. You can verify this by opening your browser's network tab — no requests are made when processing your files.
+          </div></div>
+        </div>
+
+        <div class="faq-item spotlight">
+          <button class="faq-question">
+            Will Instagram know I'm using this?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner">
+            Instagram won't know you used Unfollowr. The data export is an official Meta feature. The actual unfollowing happens on Instagram — you'll need to manually unfollow each account, but we make it one click away with direct profile links.
+          </div></div>
+        </div>
+
+        <div class="faq-item spotlight">
+          <button class="faq-question">
+            Why do I need to export my data?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner">
+            Instagram doesn't show you who doesn't follow you back directly. The data export is the only official way to get your complete followers and following lists. Once you have both, comparing them is simple — that's exactly what Unfollowr does.
+          </div></div>
+        </div>
+
+        <div class="faq-item spotlight">
+          <button class="faq-question">
+            How often should I do this?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner">
+            Whenever you feel like cleaning up. Monthly is a good cadence if you follow a lot of accounts. Each export takes about 5 minutes, and Unfollowr processes it instantly. Your progress is saved in your browser, so you can take breaks.
+          </div></div>
+        </div>
+
+        <div class="faq-item spotlight">
+          <button class="faq-question">
+            Can I use this on my phone?
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </button>
+          <div class="faq-answer"><div class="faq-answer-inner">
+            You can browse the site on mobile, but folder upload works best on desktop browsers (Chrome, Edge, Firefox, Safari). On mobile, you may need to select individual JSON files instead of the whole folder. Either way, your data stays on your device.
+          </div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="logo.png" alt="Unfollowr" class="logo-mark" style="width:24px;height:24px">
+        <span class="logo-text">Unfollowr</span>
+        <span>· Find who doesn't follow you back</span>
+      </div>
+      <div class="footer-links">
+        <a href="#how">How it works</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener">Instagram Data Center</a>
+      </div>
+      <div class="footer-disclaimer">
+        Unfollowr is an independent tool and is not affiliated with, endorsed by, or sponsored by Instagram or Meta. Your data never leaves your browser.
+      </div>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMessage">Copied!</span>
+</div>
+
+<script>
+// State
+let state = {
+  following: [],
+  followers: [],
+  nonFollowers: [],
+  unfollowed: new Set(),
+  filtered: [],
+  search: '',
+  sort: 'alpha',
+  isDemo: false,
+  wasComplete: false
+};
+
+// Elements
+const $ = id => document.getElementById(id);
+const dropZone = $('dropZone');
+const fileInput = $('fileInput');
+const browseBtn = $('browseBtn');
+const fileStatus = $('fileStatus');
+const processingState = $('processingState');
+const results = $('results');
+const accountsList = $('accountsList');
+const searchInput = $('searchInput');
+const sortSelect = $('sortSelect');
+const resetBtn = $('resetBtn');
+const resetBtnText = $('resetBtnText');
+const completionBanner = $('completionBanner');
+const toast = $('toast');
+const toastMessage = $('toastMessage');
+const demoLink = $('demoLink');
+const demoBannerContainer = $('demoBannerContainer');
+
+// Scroll progress
+window.addEventListener('scroll', () => {
+  const scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
+  $('scrollProgress').style.width = Math.min(scrolled, 100) + '%';
+});
+
+// Reveal on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Browse
+browseBtn.addEventListener('click', e => { e.stopPropagation(); fileInput.click(); });
+dropZone.addEventListener('click', e => {
+  if (e.target === demoLink || demoLink.contains(e.target)) return;
+  fileInput.click();
+});
+
+// Drag and drop
+['dragenter', 'dragover'].forEach(name => {
+  dropZone.addEventListener(name, e => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragging'); });
+});
+['dragleave', 'drop'].forEach(name => {
+  dropZone.addEventListener(name, e => {
+    e.preventDefault(); e.stopPropagation();
+    if (name === 'dragleave' && dropZone.contains(e.relatedTarget)) return;
+    dropZone.classList.remove('dragging');
+  });
+});
+
+dropZone.addEventListener('drop', e => {
+  const items = e.dataTransfer.items;
+  if (items && items.length > 0 && items[0].webkitGetAsEntry) {
+    const entries = [];
+    for (let i = 0; i < items.length; i++) {
+      const entry = items[i].webkitGetAsEntry();
+      if (entry) entries.push(entry);
+    }
+    Promise.all(entries.map(traverseEntry)).then(all => {
+      handleFiles(all.flat());
+    });
+  } else {
+    handleFiles(Array.from(e.dataTransfer.files));
+  }
+});
+
+fileInput.addEventListener('change', e => {
+  handleFiles(Array.from(e.target.files));
+  e.target.value = '';
+});
+
+function traverseEntry(entry) {
+  return new Promise(resolve => {
+    if (entry.isFile) {
+      entry.file(file => resolve([file]), () => resolve([]));
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      const all = [];
+      const readBatch = () => {
+        reader.readEntries(async entries => {
+          if (entries.length === 0) { resolve(all); return; }
+          for (const e of entries) {
+            const files = await traverseEntry(e);
+            all.push(...files);
+          }
+          readBatch();
+        }, () => resolve(all));
+      };
+      readBatch();
+    } else { resolve([]); }
+  });
+}
+
+function handleFiles(files) {
+  const followersFile = files.find(f => f.name === 'followers_1.json');
+  const followingFile = files.find(f => f.name === 'following.json');
+
+  fileStatus.innerHTML = '';
+  fileStatus.classList.add('active');
+
+  [{ name: 'followers_1.json', found: !!followersFile },
+   { name: 'following.json', found: !!followingFile }].forEach(item => {
+    const div = document.createElement('div');
+    div.className = `file-status-item ${item.found ? 'found' : 'missing'}`;
+    div.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        ${item.found
+          ? '<polyline points="20 6 9 17 4 12"/>'
+          : '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'}
+      </svg>
+      <span class="filename">${item.name}</span>
+      <span>${item.found ? 'Found' : 'Not found'}</span>`;
+    fileStatus.appendChild(div);
+  });
+
+  if (!followersFile || !followingFile) {
+    showToast('Could not find both JSON files in the dropped folder.', false);
+    return;
+  }
+
+  processingState.classList.add('active');
+  dropZone.classList.add('processing');
+
+  Promise.all([followersFile.text(), followingFile.text()]).then(([fText, gText]) => {
+    try {
+      const fJson = JSON.parse(fText);
+      const gJson = JSON.parse(gText);
+      state.followers = extractUsernames(fJson, 'followers');
+      state.following = extractUsernames(gJson, 'following');
+      computeNonFollowers();
+      renderResults();
+      setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+    } catch (err) {
+      showToast('Could not parse the JSON files. Make sure you exported as JSON.', false);
+    } finally {
+      processingState.classList.remove('active');
+      dropZone.classList.remove('processing');
+    }
+  }).catch(() => {
+    showToast('Error reading files. Try again.', false);
+    processingState.classList.remove('active');
+    dropZone.classList.remove('processing');
+  });
+}
+
+function extractUsernames(json, type) {
+  let list = [];
+  if (type === 'followers') {
+    list = Array.isArray(json) ? json : (json?.relationships_followers ?? (typeof json === 'object' ? Object.values(json).flat() : []));
+  } else if (type === 'following') {
+    list = Array.isArray(json) ? json : (json?.relationships_following ?? (typeof json === 'object' ? Object.values(json).flat() : []));
+  }
+
+  const out = [];
+  const seen = new Set();
+
+  list.forEach(item => {
+    let username = '';
+    let timestamp = 0;
+
+    if (item && item.string_list_data && item.string_list_data.length > 0) {
+      for (const sub of item.string_list_data) {
+        if (sub.value && sub.value.trim()) { 
+          username = sub.value.trim(); 
+          timestamp = sub.timestamp || 0; 
+          break; 
+        }
+        if (sub.href && sub.href.trim()) { 
+          username = sub.href.trim().replace(/\/$/, '').split('/').pop(); 
+          timestamp = sub.timestamp || 0; 
+          break; 
+        }
+      }
+    }
+    
+    if (!username && item && item.title && item.title.trim()) {
+      username = item.title.trim();
+    }
+
+    if (username && !seen.has(username)) {
+      seen.add(username);
+      out.push({ username, timestamp });
+    }
+  });
+
+  return out;
+}
+
+function computeNonFollowers() {
+  const followerSet = new Set(state.followers.map(f => f.username));
+  state.nonFollowers = state.following.filter(u => !followerSet.has(u.username));
+  // Restore saved progress
+  const saved = localStorage.getItem('unfollowr:done');
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved);
+      const valid = new Set(arr.filter(u => state.nonFollowers.some(n => n.username === u)));
+      state.unfollowed = valid;
+    } catch { state.unfollowed = new Set(); }
+  } else {
+    state.unfollowed = new Set();
+  }
+}
+
+function renderResults() {
+  animateCounter('statFollowing', state.following.length);
+  animateCounter('statFollowers', state.followers.length);
+  animateCounter('statNonFollowers', state.nonFollowers.length);
+  animateCounter('statUnfollowed', state.unfollowed.size);
+
+  const total = state.nonFollowers.length;
+  const done = state.unfollowed.size;
+  $('progressDone').textContent = done;
+  $('progressTotal').textContent = total;
+  $('progressFill').style.width = total > 0 ? (done / total * 100) + '%' : '0%';
+
+  const isComplete = total > 0 && done === total;
+  if (isComplete && !state.wasComplete) {
+    completionBanner.classList.add('active');
+    confetti();
+  } else if (!isComplete) {
+    completionBanner.classList.remove('active');
+  }
+  state.wasComplete = isComplete;
+
+  applyFilter();
+  results.classList.add('active');
+}
+
+function applyFilter() {
+  let list = state.nonFollowers.filter(item =>
+    item.username.toLowerCase().includes(state.search.toLowerCase())
+  );
+  switch (state.sort) {
+    case 'alpha': list.sort((a, b) => a.username.localeCompare(b.username)); break;
+    case 'recent': list.sort((a, b) => b.timestamp - a.timestamp); break;
+    case 'done': list.sort((a, b) => (state.unfollowed.has(a.username) ? 0 : 1) - (state.unfollowed.has(b.username) ? 0 : 1)); break;
+  }
+  state.filtered = list;
+  renderList();
+}
+
+function renderList() {
+  accountsList.innerHTML = '';
+  if (state.filtered.length === 0) {
+    $('emptyState').style.display = 'block';
+    return;
+  }
+  $('emptyState').style.display = 'none';
+
+  state.filtered.forEach(item => {
+    const isDone = state.unfollowed.has(item.username);
+    const initial = item.username.charAt(0).toUpperCase();
+    const color = getColorForUsername(item.username);
+    const row = document.createElement('div');
+    row.className = `account-row ${isDone ? 'done' : ''}`;
+    const safeUsername = escapeAttr(item.username);
+    row.innerHTML = `
+      <div class="account-avatar" style="background:${color}">${escapeHtml(initial)}</div>
+      <div class="account-info">
+        <div class="account-username">@${escapeHtml(item.username)}</div>
+        <div class="account-meta">${isDone ? 'Marked as unfollowed' : "Doesn't follow you back"}</div>
+      </div>
+      <div class="account-actions">
+        <button class="icon-btn" data-action="copy" data-username="${safeUsername}" title="Copy username" aria-label="Copy username">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+        <a class="icon-btn" href="https://instagram.com/${encodeURIComponent(item.username)}" target="_blank" rel="noopener" title="Open in Instagram" aria-label="Open in Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </a>
+        <button class="check-btn" data-action="toggle" data-username="${safeUsername}" title="${isDone ? 'Mark as not done' : 'Mark as unfollowed'}" aria-label="Toggle unfollowed">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+        </button>
+      </div>`;
+    accountsList.appendChild(row);
+  });
+
+  accountsList.querySelectorAll('[data-action="toggle"]').forEach(btn => {
+    btn.addEventListener('click', () => toggleUnfollowed(btn.dataset.username));
+  });
+  accountsList.querySelectorAll('[data-action="copy"]').forEach(btn => {
+    btn.addEventListener('click', () => copyUsername(btn.dataset.username));
+  });
+}
+
+function getColorForUsername(username) {
+  const colors = [
+    'linear-gradient(135deg,#4338CA,#3429A8)',
+    'linear-gradient(135deg,#7C3AED,#6D28D9)',
+    'linear-gradient(135deg,#1E3A8A,#1E40AF)',
+    'linear-gradient(135deg,#5B50E6,#4338CA)',
+    'linear-gradient(135deg,#6366F1,#4F46E5)',
+    'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+    'linear-gradient(135deg,#3730A3,#312E81)',
+    'linear-gradient(135deg,#4F46E5,#3730A3)'
+  ];
+  let hash = 0;
+  for (let i = 0; i < username.length; i++) {
+    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+function toggleUnfollowed(username) {
+  if (state.unfollowed.has(username)) {
+    state.unfollowed.delete(username);
+  } else {
+    state.unfollowed.add(username);
+    showToast(`@${username} marked as unfollowed`);
+  }
+  if (!state.isDemo) saveState();
+  renderResults();
+}
+
+function copyUsername(username) {
+  navigator.clipboard.writeText(username).then(() => {
+    showToast(`Copied @${username}`);
+  }).catch(() => {
+    showToast('Could not copy', false);
+  });
+}
+
+function saveState() {
+  localStorage.setItem('unfollowr:done', JSON.stringify([...state.unfollowed]));
+}
+
+function animateCounter(id, target) {
+  const el = $(id);
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) { el.textContent = target; return; }
+  const duration = 700;
+  const start = performance.now();
+  function update(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    el.textContent = Math.round(current + (target - current) * eased);
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function showToast(message, success = true) {
+  toastMessage.textContent = message;
+  toast.querySelector('svg').style.color = success ? 'var(--success)' : 'var(--danger)';
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// Search and sort
+searchInput.addEventListener('input', e => { state.search = e.target.value; applyFilter(); });
+sortSelect.addEventListener('change', e => { state.sort = e.target.value; applyFilter(); });
+
+// Reset (two-step confirmation)
+let resetArmed = false;
+let resetTimer;
+resetBtn.addEventListener('click', () => {
+  if (!resetArmed) {
+    resetArmed = true;
+    resetBtnText.textContent = 'Click again to confirm';
+    showToast('Click reset again to confirm');
+    clearTimeout(resetTimer);
+    resetTimer = setTimeout(() => {
+      resetArmed = false;
+      resetBtnText.textContent = 'Start over';
+    }, 3000);
+    return;
+  }
+  // Actually reset
+  state = { following: [], followers: [], nonFollowers: [], unfollowed: new Set(), filtered: [], search: '', sort: 'alpha', isDemo: false, wasComplete: false };
+  localStorage.removeItem('unfollowr:done');
+  searchInput.value = '';
+  sortSelect.value = 'alpha';
+  fileStatus.innerHTML = '';
+  fileStatus.classList.remove('active');
+  demoBannerContainer.innerHTML = '';
+  results.classList.remove('active');
+  completionBanner.classList.remove('active');
+  resetArmed = false;
+  resetBtnText.textContent = 'Start over';
+  document.getElementById('start').scrollIntoView({ behavior: 'smooth' });
+});
+
+
+// FAQ
+document.querySelectorAll('.faq-item').forEach(item => {
+  item.querySelector('.faq-question').addEventListener('click', () => item.classList.toggle('open'));
+});
+
+// Demo data
+demoLink.addEventListener('click', e => {
+  e.stopPropagation();
+  loadDemoData();
+});
+
+function loadDemoData() {
+  const samples = [
+    'travel_diaries','foodie_paris','wanderlust_kid','brand_official','old_friend_2010',
+    'travel_addict_92','photography_daily','vintage_cars','music_lover_92','bookworm_corner',
+    'fitness_junkie','art_collective','coffee_morning','sunset_chaser','minimal_living',
+    'street_style','plant_parent','late_night_thoughts','ocean_vibes','mountain_high',
+    'city_explorer','food_art_chef','vibe_checker','aesthetic_dreams','daily_inspiration',
+    'creative_corner','wander_woman','tech_enthusiast','film_camera_lover','analog_dreams'
+  ];
+  const now = Math.floor(Date.now() / 1000);
+  state.following = samples.map((u, i) => ({ username: u, timestamp: now - i * 86400 }));
+  // First 12 follow back
+  state.followers = samples.slice(0, 12).map((u, i) => ({ username: u, timestamp: now - i * 86400 }));
+  state.nonFollowers = state.following.filter(u => !state.followers.some(f => f.username === u.username));
+  state.unfollowed = new Set();
+  state.isDemo = true;
+  state.wasComplete = false;
+
+  // Demo banner
+  demoBannerContainer.innerHTML = `
+    <div class="demo-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <span><strong>Demo mode:</strong> Showing sample data. Drop your real folder to see your actual non-followers.</span>
+    </div>`;
+
+  renderResults();
+  setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+// Confetti
+function confetti() {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const colors = ['#4338CA', '#5B50E6', '#7C3AED', '#1E3A8A', '#6366F1', '#8B5CF6'];
+  for (let i = 0; i < 180; i++) {
+    particles.push({
+      x: window.innerWidth / 2 + (Math.random() - 0.5) * 200,
+      y: window.innerHeight / 3,
+      vx: (Math.random() - 0.5) * 14,
+      vy: -Math.random() * 14 - 4,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 14,
+      shape: Math.random() > 0.5 ? 'rect' : 'circle'
+    });
+  }
+  let frame = 0;
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy += 0.4;
+      p.vx *= 0.99;
+      p.rotation += p.rotSpeed;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rotation * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      if (p.shape === 'rect') {
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+    frame++;
+    if (frame < 200) requestAnimationFrame(animate);
+    else canvas.remove();
+  }
+  animate();
+}
+
+// --- Dynamic Life Animations ---
+
+// 1. Cursor Aura
+const cursorAura = document.getElementById('cursor-aura');
+if (cursorAura) {
+  let mouseX = window.innerWidth / 2;
+  let mouseY = window.innerHeight / 2;
+  let auraX = mouseX;
+  let auraY = mouseY;
+  
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+  
+  function animateAura() {
+    // Smooth easing
+    auraX += (mouseX - auraX) * 0.08;
+    auraY += (mouseY - auraY) * 0.08;
+    cursorAura.style.transform = `translate(${auraX}px, ${auraY}px) translate(-50%, -50%)`;
+    requestAnimationFrame(animateAura);
+  }
+  
+  // Only start animation if device supports hover
+  if (window.matchMedia("(pointer: fine)").matches) {
+    animateAura();
+  }
+}
+
+// 2. Spotlight Cards
+function initSpotlights() {
+  const cards = document.querySelectorAll('.spotlight');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      card.style.setProperty('--x', `${x}px`);
+      card.style.setProperty('--y', `${y}px`);
+    });
+  });
+}
+
+
+// Initialize dynamic effects
+initSpotlights();
+
+// Force scroll to top on reload
+if (history.scrollRestoration) {
+  history.scrollRestoration = 'manual';
+}
+window.scrollTo(0, 0);
+</script>
+</body>
+</html>
