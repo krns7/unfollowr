@@ -136,15 +136,6 @@ section{position:relative;z-index:2}
 .steps-meta{display:flex;justify-content:center;gap:24px;margin-bottom:48px;flex-wrap:wrap}
 .steps-meta-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-dim)}
 .steps-meta-item svg{width:16px;height:16px;color:var(--accent)}
-.step-list{list-style:none;position:relative}
-.step-list::before{content:'';position:absolute;left:23px;top:24px;bottom:24px;width:2px;background:linear-gradient(to bottom,var(--border-2),var(--border),transparent);z-index:0}
-.step{display:flex;gap:20px;padding:16px 0;position:relative}
-.step-num{width:48px;height:48px;border-radius:50%;background:var(--surface);border:2px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:600;font-size:16px;color:var(--accent);flex-shrink:0;position:relative;z-index:1;box-shadow:0 2px 6px rgba(26,29,60,.06)}
-.step-num::before{content:'';position:absolute;inset:-3px;border-radius:50%;background:var(--bg);z-index:-1}
-.step-content{flex:1;padding-top:4px}
-.step-content h3{font-family:var(--font-display);font-size:18px;font-weight:600;margin-bottom:6px;letter-spacing:-.01em;color:var(--text)}
-.step-content p{color:var(--text-dim);font-size:15px;line-height:1.6;margin-bottom:8px}
-.step-content code{background:var(--surface-2);padding:2px 8px;border-radius:6px;font-size:13px;color:var(--accent);font-family:var(--font-mono);border:1px solid var(--border)}
 .step-btn{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--surface-2);border:1px solid var(--border-2);border-radius:8px;font-size:13px;color:var(--text);font-weight:500;margin:0 2px}
 .step-callout{display:flex;gap:10px;padding:12px 14px;background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.18);border-radius:var(--radius-sm);margin-top:10px;font-size:13px;color:var(--text-dim);line-height:1.5}
 .step-callout svg{width:16px;height:16px;color:var(--warning);flex-shrink:0;margin-top:2px}
@@ -152,6 +143,23 @@ section{position:relative;z-index:2}
 .step-callout.success svg{color:var(--success)}
 .step-link{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--accent);color:#fff;text-decoration:none;font-weight:600;font-size:14px;border-radius:var(--radius-sm);margin-top:8px;transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 2px 10px rgba(67,56,202,.25)}
 .step-link:hover{background:var(--accent-bright);transform:translateY(-1px);box-shadow:0 6px 20px rgba(67,56,202,.30)}
+
+/* Carousel Tutorial */
+.tutorial-carousel{width:100%;max-width:800px;margin:0 auto;position:relative}
+.tc-viewport{overflow:hidden;padding:12px 0}
+.tc-track{display:flex;transition:transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)}
+.tc-slide{width:100%;flex:0 0 100%;box-sizing:border-box;padding:0 16px}
+.tc-header{display:flex;flex-direction:column;align-items:flex-start;gap:12px;margin-bottom:24px}
+.tc-num{background:rgba(67,56,202,.08);color:var(--accent);font-family:var(--font-display);font-weight:600;font-size:15px;padding:6px 14px;border-radius:100px}
+.tc-title{font-family:var(--font-display);font-size:28px;font-weight:700;color:var(--text);letter-spacing:-.01em;line-height:1.2}
+.tc-content p{color:var(--text-dim);font-size:17px;line-height:1.6;margin-bottom:16px}
+.tc-nav{display:flex;align-items:center;justify-content:space-between;margin-top:32px;padding-top:24px;border-top:1px solid var(--border-2)}
+.tc-btn{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface-2);border:1px solid var(--border-2);color:var(--text);cursor:pointer;transition:all .2s}
+.tc-btn:hover:not(:disabled){background:var(--accent);color:#fff;border-color:var(--accent)}
+.tc-btn:disabled{opacity:0.4;cursor:not-allowed}
+.tc-dots{display:flex;gap:10px}
+.tc-dot{width:10px;height:10px;border-radius:50%;background:var(--border-strong);cursor:pointer;transition:all .2s;border:none;padding:0}
+.tc-dot.active{background:var(--accent);transform:scale(1.2)}
 
 /* Drop zone */
 .drop-section{padding:96px 0}
@@ -422,51 +430,111 @@ footer{border-top:1px solid var(--border);padding:48px 0;position:relative;z-ind
           </div>
         </div>
 
-        <ol class="step-list">
-          <li class="step">
-            <div class="step-num">1</div>
-            <div class="step-content">
-              <h3>Open Instagram's Data Center</h3>
-              <p>Visit the official Meta Accounts Center and login. Click <span class="step-btn">Export your information</span>, then <span class="step-btn">Create export</span>. Choose your Instagram profile and click <span class="step-btn">Export to device</span>.</p>
-              <a href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener" class="step-link">
-                Open Instagram Data Center
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-              </a>
-            </div>
-          </li>
+        <div class="tutorial-carousel reveal">
+          <div class="tc-viewport">
+            <div class="tc-track" id="tcTrack">
+              <!-- Slide 1 -->
+              <div class="tc-slide">
+                <div class="tc-header">
+                  <span class="tc-num">Step 1/6</span>
+                  <h3 class="tc-title">Login to Accounts Center</h3>
+                </div>
+                <div class="tc-content">
+                  <p>Go to the Meta Accounts Center and login to your Instagram account.</p>
+                  <a href="https://accountscenter.instagram.com/info_and_permissions/" target="_blank" rel="noopener" class="step-link">
+                    Open Accounts Center
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+                  </a>
+                </div>
+              </div>
 
-          <li class="step">
-            <div class="step-num">2</div>
-            <div class="step-content">
-              <h3>Select Followers & Following</h3>
-              <p>Click <span class="step-btn">Customise information</span>, then tick <strong>only</strong> <code>Followers and Following</code>. Click Save.</p>
-              <div class="step-callout">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span>Only tick this specific box. Adding photos or messages makes the export massive, and Unfollowr doesn't need them.</span>
+              <!-- Slide 2 -->
+              <div class="tc-slide">
+                <div class="tc-header">
+                  <span class="tc-num">Step 2/6</span>
+                  <h3 class="tc-title">Create Export</h3>
+                </div>
+                <div class="tc-content">
+                  <p>Click <span class="step-btn">Export your information</span>.</p>
+                  <p>Then click <span class="step-btn">Create export</span> on the pop up.</p>
+                  <p>Finally, choose the right Instagram profile.</p>
+                </div>
+              </div>
+
+              <!-- Slide 3 -->
+              <div class="tc-slide">
+                <div class="tc-header">
+                  <span class="tc-num">Step 3/6</span>
+                  <h3 class="tc-title">Export to Device</h3>
+                </div>
+                <div class="tc-content">
+                  <p>Click <span class="step-btn">Export to device</span>.</p>
+                </div>
+              </div>
+
+              <!-- Slide 4 -->
+              <div class="tc-slide">
+                <div class="tc-header">
+                  <span class="tc-num">Step 4/6</span>
+                  <h3 class="tc-title">Customize Information</h3>
+                </div>
+                <div class="tc-content">
+                  <p>Set <span class="step-btn">Notify</span> to the email address you want to be notified at.</p>
+                  <p>Set <span class="step-btn">Customise information</span> to <strong>Followers and Following</strong> only, then click Save.</p>
+                  <div class="step-callout">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span>Only tick this specific box. Adding photos or messages makes the export massive.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 5 -->
+              <div class="tc-slide">
+                <div class="tc-header">
+                  <span class="tc-num">Step 5/6</span>
+                  <h3 class="tc-title">Date Range & Format</h3>
+                </div>
+                <div class="tc-content">
+                  <p>Set <span class="step-btn">Date range</span> to <strong>All time</strong> and click Save.</p>
+                  <p>Set format to <strong>JSON</strong> and click Save.</p>
+                  <div class="step-callout success">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <span><strong>JSON is required</strong> — Unfollowr cannot read HTML exports.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slide 6 -->
+              <div class="tc-slide">
+                <div class="tc-header">
+                  <span class="tc-num">Step 6/6</span>
+                  <h3 class="tc-title">Start Export</h3>
+                </div>
+                <div class="tc-content">
+                  <p>Click <span class="step-btn">Start Export</span>.</p>
+                  <p>Put your password one more time and you're done!</p>
+                </div>
               </div>
             </div>
-          </li>
-
-          <li class="step">
-            <div class="step-num">3</div>
-            <div class="step-content">
-              <h3>Set Date Range & Format</h3>
-              <p>Click <span class="step-btn">Date range</span> and set to <code>All Time</code>, then Save. Click <span class="step-btn">format</span> and set to <code>JSON</code>, then Save.</p>
-              <div class="step-callout success">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                <span><strong>JSON is required</strong> — Unfollowr cannot read HTML exports.</span>
-              </div>
+          </div>
+          
+          <div class="tc-nav">
+            <button class="tc-btn" id="tcPrev" disabled>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <div class="tc-dots" id="tcDots">
+              <button class="tc-dot active" data-index="0"></button>
+              <button class="tc-dot" data-index="1"></button>
+              <button class="tc-dot" data-index="2"></button>
+              <button class="tc-dot" data-index="3"></button>
+              <button class="tc-dot" data-index="4"></button>
+              <button class="tc-dot" data-index="5"></button>
             </div>
-          </li>
-
-          <li class="step">
-            <div class="step-num">4</div>
-            <div class="step-content">
-              <h3>Start Export & Download</h3>
-              <p>Click <span class="step-btn">Start Export</span> and enter your password. Instagram will email you when it's ready (usually under 5 mins). Download the data folder.</p>
-            </div>
-          </li>
-        </ol>
+            <button class="tc-btn" id="tcNext">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1209,6 +1277,38 @@ if (history.scrollRestoration) {
   history.scrollRestoration = 'manual';
 }
 window.scrollTo(0, 0);
+// Carousel Logic
+const tcTrack = document.getElementById('tcTrack');
+const tcPrev = document.getElementById('tcPrev');
+const tcNext = document.getElementById('tcNext');
+const tcDots = document.querySelectorAll('.tc-dot');
+let currentSlide = 0;
+const totalSlides = 6;
+
+function updateCarousel() {
+  if(!tcTrack) return;
+  tcTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+  tcPrev.disabled = currentSlide === 0;
+  tcNext.disabled = currentSlide === totalSlides - 1;
+  tcDots.forEach((dot, idx) => {
+    dot.classList.toggle('active', idx === currentSlide);
+  });
+}
+
+if (tcPrev && tcNext) {
+  tcPrev.addEventListener('click', () => {
+    if (currentSlide > 0) { currentSlide--; updateCarousel(); }
+  });
+  tcNext.addEventListener('click', () => {
+    if (currentSlide < totalSlides - 1) { currentSlide++; updateCarousel(); }
+  });
+  tcDots.forEach((dot, idx) => {
+    dot.addEventListener('click', () => {
+      currentSlide = idx;
+      updateCarousel();
+    });
+  });
+}
 </script>
 </body>
 </html>
