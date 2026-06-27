@@ -354,11 +354,11 @@ footer{border-top:1px solid var(--border);padding:48px 0;position:relative;z-ind
           <h1>Find who doesn't <em>follow you back.</em></h1>
           <p>Drop the Instagram data folder you'll export in 5 minutes. Get a clean list of accounts to unfollow — no extensions, no scams, nothing leaves your device.</p>
           <div class="hero-cta">
-            <a href="#start" class="btn btn-primary btn-lg">
-              Start cleaning
+            <a href="#how" class="btn btn-primary btn-lg">
+              How it works
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
-            <a href="#how" class="btn btn-ghost btn-lg">See how it works</a>
+            <button id="heroDemoBtn" class="btn btn-ghost btn-lg">Try demo</button>
           </div>
           <div class="hero-stats">
             <div class="hero-stat"><strong>0 KB</strong><span>data stored</span></div>
@@ -762,6 +762,7 @@ const completionBanner = $('completionBanner');
 const toast = $('toast');
 const toastMessage = $('toastMessage');
 const demoLink = $('demoLink');
+const heroDemoBtn = $('heroDemoBtn');
 const demoBannerContainer = $('demoBannerContainer');
 
 // Scroll progress
@@ -1159,6 +1160,13 @@ demoLink.addEventListener('click', e => {
   e.stopPropagation();
   loadDemoData();
 });
+
+if (heroDemoBtn) {
+  heroDemoBtn.addEventListener('click', e => {
+    e.preventDefault();
+    loadDemoData();
+  });
+}
 
 function loadDemoData() {
   const samples = [
